@@ -2,14 +2,14 @@
 
 /*********************************MIAO_DELAY_FUNC********************************************/
 /*
-ms delay function
+éé˜»å¡å¼
 
 return 1 : delay not complete
 
 return 0 : delay complete
 */
 
-uint8_t delay_ms(uint16_t time, uint32_t* get_tick ) 
+uint8_t Delay_ms_uwTick(uint16_t time, uint32_t* get_tick ) 
 {  
 	if((uwTick - *get_tick) < time) return 1;
 	
@@ -18,24 +18,60 @@ uint8_t delay_ms(uint16_t time, uint32_t* get_tick )
 	return 0;
 }
 
+/*
 
-// ³õÊ¼»¯DWT£¨ÔÚmain()ÔçÆÚµ÷ÓÃ£©
-void DWT_Init(void) 
-{
-    CoreDebug->DEMCR |= CoreDebug_DEMCR_TRCENA_Msk;  // enable trace unitÆôÓÃ¸ú×Ùµ¥Ôª
-    DWT->CYCCNT = 0;                                // empty counter¼ÆÊıÆ÷
-    DWT->CTRL |= DWT_CTRL_CYCCNTENA_Msk;            // start counterÆô¶¯¼ÆÊıÆ÷
+busy-wating é˜»å¡å¼
+
+*/
+void Delay_ms_uwTick_cycle(uint16_t time, uint32_t* get_tick ) 
+{  
+	*get_tick = uwTick;	
+	
+	while((uwTick - *get_tick) < time);
+	
 }
 
-// Î¢Ãë¼¶ÑÓÊ±£¨»ùÓÚCPUÖÜÆÚ¼ÆËã£©
-void Delay_us(uint32_t us) 
+/*
+
+DWT ç¡¬ä»¶å»¶æ—¶
+
+*/
+
+
+// åˆå§‹åŒ–DWTï¼ˆåœ¨main()æ—©æœŸè°ƒç”¨ï¼‰
+void DWT_Init(void) 
+{
+    CoreDebug->DEMCR |= CoreDebug_DEMCR_TRCENA_Msk;  // enable trace unitå¯ç”¨è·Ÿè¸ªå•å…ƒ
+    DWT->CYCCNT = 0;                                // empty counterè®¡æ•°å™¨
+    DWT->CTRL |= DWT_CTRL_CYCCNTENA_Msk;            // start counterå¯åŠ¨è®¡æ•°å™¨
+}
+
+/*
+
+based on cpu cycles
+
+*/
+void Delay_us_cpu(uint32_t us) 
 {
     uint32_t start = DWT_GetCycles();
-    uint32_t ticks = us * (SystemCoreClock / 1000000); // calculate CPU cycles¼ÆËãCPUÖÜÆÚÊı
+    uint32_t ticks = us * (SystemCoreClock / 1000000); // calculate CPU cyclesè®¡ç®—CPUå‘¨æœŸæ•°
     while ((DWT_GetCycles() - start) < ticks);
 }
 
-// Î¢Ãë¼¶¼ÆÊ±Æ÷¼ì²é
+
+void Delay_ms_cpu(uint32_t ms)
+{
+do
+	Delay_us_cpu(1000);
+while(ms--);
+
+}
+/*
+
+timer check
+
+
+*/
 uint8_t Timer_Check_us(uint32_t *last_cycles, uint32_t interval_us) 
 {
     uint32_t current = DWT_GetCycles();
